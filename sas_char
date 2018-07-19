@@ -1,0 +1,42 @@
+
+%macro cxq_char(InputVar_List=, input_DSN=,target= ,output_var= );
+%LET i =1;
+	
+		%DO %WHILE (%SCAN(&InputVar_List, &i) NE );
+		        
+				%GLOBAL InputVar&i;
+				%LET x = %SCAN(&InputVar_List, &i);
+				
+				proc means data=&input_DSN nway noprint;
+				class &x ;
+				var &target;
+				output out=&x sum=; 
+				 run;
+				data &x;
+				set &x;
+				length  var_name $100.;
+				length input_var $100.;
+				rename &x=input_var;
+				label &x=input_var;
+				var_name="&x.";
+				run;
+		 
+				%if &i=1 %then %do;
+				
+				data &output_var;
+				set &x;
+			
+				run;
+				
+				%end;
+				%else %do;
+				
+				proc append base=&output_var  data=&x force; run; 
+				
+				%end;
+		  proc delete data=&x;run;
+	    %LET i = %EVAL(&i+ 1);	
+		%END;
+
+
+ %mend;
